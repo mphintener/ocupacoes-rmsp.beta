@@ -1,30 +1,6 @@
 {
-    "projeto": "Ocupações RMSP",
-    "atualizado": "28/02/2026 21:46",
-    "vagas": [
-        {
-            "empresa": "Centro Logístico Anhanguera",
-            "vaga": "Operador de Empilhadeira",
-            "salario": 2350.0,
-            "qualificacao": "Curso NR11, Ensino Médio",
-            "local": "Caieiras - SP",
-            "setor": "Logística"
-        },
-        {
-            "empresa": "Varejo Express Franco",
-            "vaga": "Assistente de Estoque",
-            "salario": 1890.0,
-            "qualificacao": "Informática Básica",
-            "local": "Franco da Rocha - Centro",
-            "setor": "Comércio"
-        },
-        {
-            "empresa": "Tele-Serviços Lapa",
-            "vaga": "Atendente de Suporte",
-            "salario": 1550.0,
-            "qualificacao": "Digitação, Boa Comunicação",
-            "local": "São Paulo - Lapa",
-            "setor": "Serviços"
-        }
-    ]
+    "projeto": "Ocupações RMSP - Estatística Real",
+    "atualizado": "28/02/2026 23:10",
+    "total_vagas": 0,
+    "vagas": []
 }

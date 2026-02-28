@@ -8,14 +8,10 @@
         body { background-color: #000; color: #fff; font-family: sans-serif; margin: 0; padding: 20px; }
         h1 { color: #FFD700; border-bottom: 2px solid #FF0000; padding-bottom: 10px; font-size: 1.2rem; margin-bottom: 15px; }
         
-        /* Estilo do Dashboard de Insights */
+        /* Dashboard de Estatísticas */
         #dashboard-estatistico { 
-            background: #111; 
-            border: 1px solid #FFD700; 
-            padding: 12px; 
-            margin-bottom: 20px; 
-            font-size: 0.85rem;
-            border-radius: 4px;
+            background: #111; border: 1px solid #FFD700; padding: 12px; 
+            margin-bottom: 20px; font-size: 0.85rem; border-radius: 4px;
         }
 
         .vaga-card { background: #111; border-left: 5px solid #FFD700; margin-bottom: 15px; padding: 15px; border-bottom: 1px solid #222; }
@@ -39,14 +35,13 @@
         </div>
     </div>
 
-    <div id="lista-vagas">Conectando ao banco de dados...</div>
-
+    <div id="lista-vagas">Conectando ao banco de dados da RMSP...</div>
     <div class="footer" id="atualizacao"></div>
 
     <script>
         async function carregarVagas() {
             try {
-                // Anti-cache para dados sempre novos
+                // Anti-cache: força o navegador a ler o JSON novo do robô
                 const response = await fetch(`data/inteligencia.json?v=${new Date().getTime()}`);
                 const data = await response.json();
                 
@@ -54,24 +49,26 @@
                 const dashboard = document.getElementById('top-setores');
                 const footer = document.getElementById('atualizacao');
                 
-                // --- LÓGICA DE ESTATÍSTICA (INSIGHTS) ---
+                // LÓGICA DE ESTATÍSTICA: Conta as vagas por setor
                 const contagemSetores = {};
                 data.vagas.forEach(v => {
                     contagemSetores[v.setor] = (contagemSetores[v.setor] || 0) + 1;
                 });
 
+                // Cria o ranking dos 3 setores mais ofertados
                 const ranking = Object.entries(contagemSetores)
                     .sort((a, b) => b[1] - a[1])
-                    .slice(0, 3); // Pega os 3 principais setores
+                    .slice(0, 3);
 
+                // Preenche o Dashboard no topo
                 dashboard.innerHTML = `
                     <div style="margin-bottom:5px;">Top Ofertas: ${ranking.map(s => `<span style="color:#FF0000; font-weight:bold;">${s[0]}</span> (${s[1]})`).join(' | ')}</div>
                     <div style="font-size:0.75rem; color:#aaa;">Total de oportunidades mapeadas: ${data.total_vagas || data.vagas.length}</div>
                 `;
 
-                // --- RENDERIZAÇÃO DAS VAGAS ---
+                // Renderiza a lista de vagas
                 container.innerHTML = '';
-                footer.innerText = `Última varredura: ${data.atualizado}`;
+                footer.innerText = `Última varredura: ${data.atualizado || data.ultima_atualizacao}`;
 
                 data.vagas.forEach(v => {
                     container.innerHTML += `
@@ -82,7 +79,7 @@
                             <div class="info">
                                 <strong>Qualificação:</strong> ${v.qualificacao}...
                             </div>
-                            <span class="perfil-tag">📊 Perfil: ${v.perfil || 'Não classificado'}</span>
+                            <span class="perfil-tag">📊 Perfil: ${v.perfil || 'Analisando...'}</span>
                             <div style="margin-top:12px;">
                                 <span class="tag">${v.setor}</span><span class="tag">RMSP</span>
                             </div>

@@ -37,19 +37,24 @@
                 footer.innerText = `Última atualização do sistema: ${data.ultima_atualizacao}`;
 
                 data.vagas.forEach(v => {
-                    const card = `
-                        <div class="vaga-card">
-                            <div class="empresa">${v.empresa}</div>
-                            <span class="cargo">${v.vaga}</span>
-                            <div class="salario">R$ ${v.salario.toFixed(2)}</div>
-                            <div class="info">
-                                <strong>Qualificação:</strong> ${v.qualificacao}<br>
-                                <span class="tag">${v.local}</span><span class="tag">${v.setor}</span>
-                            </div>
-                        </div>
-                    `;
-                    container.innerHTML += card;
-                });
+    // O PULO DO GATO: O molde agora lê 'v.local' que vem do Scraper real
+    const card = `
+        <div class="vaga-card">
+            <div class="empresa">${v.empresa}</div>
+            <span class="cargo">${v.vaga}</span>
+            <div class="salario">${v.salario}</div>
+            <div class="info">
+                <strong>📍 Localização:</strong> <span style="color: #FFD700;">${v.local}</span><br>
+                <strong>📝 Qualificação:</strong> ${v.qualificacao}...
+            </div>
+            <div style="margin-top:10px;">
+                <span class="tag">${v.setor}</span>
+                <span class="tag">RMSP</span>
+            </div>
+        </div>
+    `;
+    container.innerHTML += card;
+});
             } catch (error) {
                 document.getElementById('lista-vagas').innerHTML = "Erro ao carregar dados. Verifique se o arquivo data/inteligencia.json existe.";
             }

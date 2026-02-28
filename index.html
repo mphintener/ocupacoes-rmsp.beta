@@ -3,67 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ocupações RMSP - Inteligência do Trabalhador</title>
+    <title>Ocupações RMSP - Inteligência</title>
     <style>
-        body { background-color: #000; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; }
-        h1 { color: #FFD700; text-transform: uppercase; border-bottom: 2px solid #FF0000; padding-bottom: 10px; font-size: 1.4rem; }
-        .vaga-card { background: #111; border-left: 5px solid #FFD700; margin-bottom: 15px; padding: 15px; border-radius: 4px; border-bottom: 1px solid #333; }
-        .empresa { color: #FF0000; font-weight: bold; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
-        .cargo { color: #FFD700; font-size: 1.1rem; margin: 5px 0; display: block; font-weight: bold; }
-        .salario { color: #00FF00; font-weight: bold; font-size: 1rem; margin-bottom: 8px; }
-        .info { font-size: 0.85rem; color: #eee; line-height: 1.4; }
-        .localizacao { color: #00BFFF; font-weight: bold; } /* Destaque para Município/Distrito */
-        .tag { background: #333; color: #fff; padding: 3px 8px; border-radius: 3px; font-size: 0.7rem; margin-right: 5px; text-transform: uppercase; }
-        .footer { font-size: 0.7rem; color: #666; margin-top: 30px; text-align: center; border-top: 1px solid #222; padding-top: 10px; }
+        body { background-color: #000; color: #fff; font-family: sans-serif; margin: 0; padding: 20px; }
+        h1 { color: #FFD700; border-bottom: 2px solid #FF0000; padding-bottom: 10px; font-size: 1.2rem; margin-bottom: 15px; }
+        
+        /* Estilo do Dashboard de Insights */
+        #dashboard-estatistico { 
+            background: #111; 
+            border: 1px solid #FFD700; 
+            padding: 12px; 
+            margin-bottom: 20px; 
+            font-size: 0.85rem;
+            border-radius: 4px;
+        }
+
+        .vaga-card { background: #111; border-left: 5px solid #FFD700; margin-bottom: 15px; padding: 15px; border-bottom: 1px solid #222; }
+        .empresa { color: #FF0000; font-weight: bold; font-size: 0.8rem; text-transform: uppercase; }
+        .cargo { color: #FFD700; font-size: 1.1rem; display: block; margin: 5px 0; font-weight: bold; }
+        .localizacao { color: #00BFFF; font-weight: bold; font-size: 0.9rem; margin: 5px 0; }
+        .info { font-size: 0.85rem; color: #ccc; line-height: 1.4; }
+        .perfil-tag { color: #FFD700; font-weight: bold; font-size: 0.75rem; margin-top: 8px; display: block; }
+        .tag { background: #333; padding: 3px 7px; font-size: 0.7rem; border-radius: 3px; margin-right: 5px; text-transform: uppercase; }
+        .footer { font-size: 0.7rem; color: #444; text-align: center; margin-top: 30px; }
     </style>
 </head>
 <body>
 
-    <h1>Ocupações RMSP <span style="font-size: 0.7rem; color: #FF0000;">● LIVE</span></h1>
-    <div id="lista-vagas">Buscando inteligência de mercado...</div>
+    <h1>Monitor de Ocupações RMSP <span style="font-size: 0.6rem; color: #FF0000;">● DINÂMICO</span></h1>
+
+    <div id="dashboard-estatistico">
+        <span style="color: #FFD700; font-weight: bold;">📊 INSIGHTS DO MÊS (RMSP):</span>
+        <div id="top-setores" style="margin-top: 8px; color: #fff; line-height: 1.5;">
+            Analisando dados do mercado...
+        </div>
+    </div>
+
+    <div id="lista-vagas">Conectando ao banco de dados...</div>
 
     <div class="footer" id="atualizacao"></div>
 
     <script>
         async function carregarVagas() {
             try {
-                // O PULO DO GATO: O timestamp (?v=...) força o navegador a baixar os dados novos da RMSP
-                const timestamp = new Date().getTime();
-                const response = await fetch(`data/inteligencia.json?v=${timestamp}`);
+                // Anti-cache para dados sempre novos
+                const response = await fetch(`data/inteligencia.json?v=${new Date().getTime()}`);
                 const data = await response.json();
                 
                 const container = document.getElementById('lista-vagas');
+                const dashboard = document.getElementById('top-setores');
                 const footer = document.getElementById('atualizacao');
                 
-                container.innerHTML = '';
-                footer.innerText = `Base de dados atualizada em: ${data.atualizado || data.ultima_atualizacao}`;
+                // --- LÓGICA DE ESTATÍSTICA (INSIGHTS) ---
+                const contagemSetores = {};
+                data.vagas.forEach(v => {
+                    contagemSetores[v.setor] = (contagemSetores[v.setor] || 0) + 1;
+                });
 
-                if (!data.vagas || data.vagas.length === 0) {
-                    container.innerHTML = "Nenhuma vaga encontrada para os critérios atuais.";
-                    return; 
-                }
+                const ranking = Object.entries(contagemSetores)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 3); // Pega os 3 principais setores
+
+                dashboard.innerHTML = `
+                    <div style="margin-bottom:5px;">Top Ofertas: ${ranking.map(s => `<span style="color:#FF0000; font-weight:bold;">${s[0]}</span> (${s[1]})`).join(' | ')}</div>
+                    <div style="font-size:0.75rem; color:#aaa;">Total de oportunidades mapeadas: ${data.total_vagas || data.vagas.length}</div>
+                `;
+
+                // --- RENDERIZAÇÃO DAS VAGAS ---
+                container.innerHTML = '';
+                footer.innerText = `Última varredura: ${data.atualizado}`;
 
                 data.vagas.forEach(v => {
-                    const card = `
+                    container.innerHTML += `
                         <div class="vaga-card">
                             <div class="empresa">${v.empresa}</div>
                             <span class="cargo">${v.vaga}</span>
-                            <div class="salario">${v.salario || 'A combinar'}</div>
+                            <div class="localizacao">📍 ${v.local}</div>
                             <div class="info">
-                                <strong>📍 Local:</strong> <span class="localizacao">${v.local}</span><br>
-                                <strong>🎓 Exigência:</strong> ${v.qualificacao}
+                                <strong>Qualificação:</strong> ${v.qualificacao}...
                             </div>
+                            <span class="perfil-tag">📊 Perfil: ${v.perfil || 'Não classificado'}</span>
                             <div style="margin-top:12px;">
-                                <span class="tag">${v.setor || 'Geral'}</span>
-                                <span class="tag">Grande SP</span>
+                                <span class="tag">${v.setor}</span><span class="tag">RMSP</span>
                             </div>
                         </div>
                     `;
-                    container.innerHTML += card;
                 });
-            } catch (error) {
-                console.error(error);
-                document.getElementById('lista-vagas').innerHTML = "Erro ao conectar com o banco de dados da RMSP.";
+            } catch (e) {
+                document.getElementById('lista-vagas').innerText = "Erro ao carregar inteligência de mercado.";
             }
         }
         carregarVagas();

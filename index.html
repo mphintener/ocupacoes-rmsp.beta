@@ -3,60 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ocupações RMSP - Beta</title>
+    <title>Ocupações RMSP - Inteligência do Trabalhador</title>
     <style>
-        body { background-color: #000; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
-        h1 { color: #FFD700; text-transform: uppercase; border-bottom: 2px solid #FF0000; padding-bottom: 10px; font-size: 1.5rem; }
-        .vaga-card { background: #1a1a1a; border-left: 5px solid #FFD700; margin-bottom: 15px; padding: 15px; border-radius: 4px; }
-        .empresa { color: #FF0000; font-weight: bold; font-size: 0.9rem; text-transform: uppercase; }
-        .cargo { color: #FFD700; font-size: 1.2rem; margin: 5px 0; display: block; }
-        .salario { color: #00FF00; font-weight: bold; }
-        .info { font-size: 0.85rem; color: #ccc; margin-top: 8px; }
-        .tag { background: #333; padding: 2px 6px; border-radius: 3px; font-size: 0.75rem; margin-right: 5px; }
-        .footer { font-size: 0.7rem; color: #666; margin-top: 30px; text-align: center; }
+        body { background-color: #000; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; }
+        h1 { color: #FFD700; text-transform: uppercase; border-bottom: 2px solid #FF0000; padding-bottom: 10px; font-size: 1.4rem; }
+        .vaga-card { background: #111; border-left: 5px solid #FFD700; margin-bottom: 15px; padding: 15px; border-radius: 4px; border-bottom: 1px solid #333; }
+        .empresa { color: #FF0000; font-weight: bold; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+        .cargo { color: #FFD700; font-size: 1.1rem; margin: 5px 0; display: block; font-weight: bold; }
+        .salario { color: #00FF00; font-weight: bold; font-size: 1rem; margin-bottom: 8px; }
+        .info { font-size: 0.85rem; color: #eee; line-height: 1.4; }
+        .localizacao { color: #00BFFF; font-weight: bold; } /* Destaque para Município/Distrito */
+        .tag { background: #333; color: #fff; padding: 3px 8px; border-radius: 3px; font-size: 0.7rem; margin-right: 5px; text-transform: uppercase; }
+        .footer { font-size: 0.7rem; color: #666; margin-top: 30px; text-align: center; border-top: 1px solid #222; padding-top: 10px; }
     </style>
 </head>
 <body>
 
-    <h1>Ocupações RMSP <span style="font-size: 0.8rem; color: #fff;">.beta</span></h1>
-    <div id="lista-vagas">Carregando oportunidades...</div>
+    <h1>Ocupações RMSP <span style="font-size: 0.7rem; color: #FF0000;">● LIVE</span></h1>
+    <div id="lista-vagas">Buscando inteligência de mercado...</div>
 
     <div class="footer" id="atualizacao"></div>
 
     <script>
         async function carregarVagas() {
             try {
-                // Busca o JSON gerado pelo seu Bot
-                const response = await fetch('data/inteligencia.json');
+                // O PULO DO GATO: O timestamp (?v=...) força o navegador a baixar os dados novos da RMSP
+                const timestamp = new Date().getTime();
+                const response = await fetch(`data/inteligencia.json?v=${timestamp}`);
                 const data = await response.json();
                 
                 const container = document.getElementById('lista-vagas');
                 const footer = document.getElementById('atualizacao');
                 
                 container.innerHTML = '';
-                footer.innerText = `Última atualização do sistema: ${data.ultima_atualizacao}`;
+                footer.innerText = `Base de dados atualizada em: ${data.atualizado || data.ultima_atualizacao}`;
+
+                if (!data.vagas || data.vagas.length === 0) {
+                    container.innerHTML = "Nenhuma vaga encontrada para os critérios atuais.";
+                    return;
+                }
 
                 data.vagas.forEach(v => {
-    // O PULO DO GATO: O molde agora lê 'v.local' que vem do Scraper real
-    const card = `
-        <div class="vaga-card">
-            <div class="empresa">${v.empresa}</div>
-            <span class="cargo">${v.vaga}</span>
-            <div class="salario">${v.salario}</div>
-            <div class="info">
-                <strong>📍 Localização:</strong> <span style="color: #FFD700;">${v.local}</span><br>
-                <strong>📝 Qualificação:</strong> ${v.qualificacao}...
-            </div>
-            <div style="margin-top:10px;">
-                <span class="tag">${v.setor}</span>
-                <span class="tag">RMSP</span>
-            </div>
-        </div>
-    `;
-    container.innerHTML += card;
-});
+                    const card = `
+                        <div class="vaga-card">
+                            <div class="empresa">${v.empresa}</div>
+                            <span class="cargo">${v.vaga}</span>
+                            <div class="salario">${v.salario || 'A combinar'}</div>
+                            <div class="info">
+                                <strong>📍 Local:</strong> <span class="localizacao">${v.local}</span><br>
+                                <strong>🎓 Exigência:</strong> ${v.qualificacao}
+                            </div>
+                            <div style="margin-top:12px;">
+                                <span class="tag">${v.setor || 'Geral'}</span>
+                                <span class="tag">Grande SP</span>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += card;
+                });
             } catch (error) {
-                document.getElementById('lista-vagas').innerHTML = "Erro ao carregar dados. Verifique se o arquivo data/inteligencia.json existe.";
+                console.error(error);
+                document.getElementById('lista-vagas').innerHTML = "Erro ao conectar com o banco de dados da RMSP.";
             }
         }
         carregarVagas();

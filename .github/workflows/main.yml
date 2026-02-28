@@ -1,9 +1,9 @@
-name: Bot_Ocupacoes
+name: Bot_Ocupacoes_Beta
 
 on:
   schedule:
-    - cron: '0 6 * * *'
-  workflow_dispatch:
+    - cron: '0 6 * * *' # Roda todo dia às 06h
+  workflow_dispatch: # Permite rodar manualmente
 
 jobs:
   build:
@@ -12,15 +12,23 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      
+      - name: Configurar Python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      - name: Rodar Scraper
+
+      - name: Instalar Dependências (O Pulo do Gato)
+        run: |
+          pip install requests beautifulsoup4
+
+      - name: Executar Motor de Busca RMSP
         run: python scripts/scraper.py
-      - name: Salvar Dados
+
+      - name: Salvar Dados no Repositório
         run: |
           git config --global user.name 'Bot Ocupacoes'
           git config --global user.email 'bot@ocupacoes.com'
           git add data/inteligencia.json
-          git commit -m "Update vagas" || echo "Sem mudanças"
+          git commit -m "Update: Vagas reais capturadas na RMSP" || echo "Sem mudanças"
           git push

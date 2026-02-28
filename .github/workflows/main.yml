@@ -1,9 +1,11 @@
-name: Bot_Ocupacoes_Beta
+name: Bot Ocupacoes Beta
 
 on:
+  push:
+    branches: [ main ]
   schedule:
-    - cron: '0 6 * * *' # Roda todo dia às 06h
-  workflow_dispatch: # Permite rodar manualmente
+    - cron: '0 9 * * *'  # Roda todo dia às 09:00
+  workflow_dispatch:      # <--- ESSA LINHA FAZ O BOTÃO APARECER!
 
 jobs:
   build:

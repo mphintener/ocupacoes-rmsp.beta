@@ -1,1 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ocupações RMSP - Beta</title>
+    <style>
+        body { background-color: #000; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
+        h1 { color: #FFD700; text-transform: uppercase; border-bottom: 2px solid #FF0000; padding-bottom: 10px; font-size: 1.5rem; }
+        .vaga-card { background: #1a1a1a; border-left: 5px solid #FFD700; margin-bottom: 15px; padding: 15px; border-radius: 4px; }
+        .empresa { color: #FF0000; font-weight: bold; font-size: 0.9rem; text-transform: uppercase; }
+        .cargo { color: #FFD700; font-size: 1.2rem; margin: 5px 0; display: block; }
+        .salario { color: #00FF00; font-weight: bold; }
+        .info { font-size: 0.85rem; color: #ccc; margin-top: 8px; }
+        .tag { background: #333; padding: 2px 6px; border-radius: 3px; font-size: 0.75rem; margin-right: 5px; }
+        .footer { font-size: 0.7rem; color: #666; margin-top: 30px; text-align: center; }
+    </style>
+</head>
+<body>
 
+    <h1>Ocupações RMSP <span style="font-size: 0.8rem; color: #fff;">.beta</span></h1>
+    <div id="lista-vagas">Carregando oportunidades...</div>
+
+    <div class="footer" id="atualizacao"></div>
+
+    <script>
+        async function carregarVagas() {
+            try {
+                // Busca o JSON gerado pelo seu Bot
+                const response = await fetch('data/inteligencia.json');
+                const data = await response.json();
+                
+                const container = document.getElementById('lista-vagas');
+                const footer = document.getElementById('atualizacao');
+                
+                container.innerHTML = '';
+                footer.innerText = `Última atualização do sistema: ${data.ultima_atualizacao}`;
+
+                data.vagas.forEach(v => {
+                    const card = `
+                        <div class="vaga-card">
+                            <div class="empresa">${v.empresa}</div>
+                            <span class="cargo">${v.vaga}</span>
+                            <div class="salario">R$ ${v.salario.toFixed(2)}</div>
+                            <div class="info">
+                                <strong>Qualificação:</strong> ${v.qualificacao}<br>
+                                <span class="tag">${v.local}</span><span class="tag">${v.setor}</span>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += card;
+                });
+            } catch (error) {
+                document.getElementById('lista-vagas').innerHTML = "Erro ao carregar dados. Verifique se o arquivo data/inteligencia.json existe.";
+            }
+        }
+        carregarVagas();
+    </script>
+</body>
+</html>

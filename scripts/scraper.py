@@ -1,62 +1,57 @@
+import requests
+from bs4 import BeautifulSoup
 import json
 import os
 from datetime import datetime
 
-def processar_vagas_rmsp(lista_vagas_coletadas):
-    """
-    O Pulo do Gato: Estrutura qualquer vaga da RMSP capturada 
-    focando no perfil de exploração e qualificação técnica.
-    """
-    os.makedirs('data', exist_ok=True)
+def minerar_vagas_grande_sp(termo="Logística"):
+    # URL focada na região metropolitana (Exemplo de busca em SP e arredores)
+    url = f"https://www.vagas.com.br/vagas-de-{termo}-em-sao-paulo"
+    headers = {"User-Agent": "Mozilla/5.0"}
     
-    # Adiciona metadados da pesquisa de doutorado
-    banco_de_dados = {
-        "projeto": "Ocupações RMSP - Inteligência do Trabalhador",
-        "pesquisa": "Monitoramento de Qualificação e Rendimento Real",
-        "atualizado": datetime.now().strftime('%d/%m/%Y %H:%M'),
-        "total_vagas_mapeadas": len(lista_vagas_coletadas),
-        "vagas": lista_vagas_coletadas
-    }
+    try:
+        response = requests.get(url, headers=headers)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        vagas_capturadas = []
 
-    with open('data/inteligencia.json', 'w', encoding='utf-8') as f:
-        json.dump(banco_de_dados, f, ensure_ascii=False, indent=4)
+        # O robô varre os "cards" de vagas da página
+        cards = soup.find_all('li', class_='vaga')
+
+        for card in cards:
+            # EXTRAÇÃO DINÂMICA
+            titulo = card.find('a', class_='link-detalhes-vaga').text.strip()
+            empresa = card.find('span', class_='vaga__empresa').text.strip()
+            
+            # O PULO DO GATO: Captura o Local (Município ou Distrito de SP)
+            # Geralmente o site exibe: "São Paulo - Lapa" ou "Guarulhos"
+            localizacao_bruta = card.find('span', class_='vaga__localizacao').text.strip()
+            
+            # Tratamento da Qualificação (Resumo da vaga)
+            resumo = card.find('div', class_='detalhes').text.strip()[:150]
+
+            vagas_capturadas.append({
+                "empresa": empresa,
+                "vaga": titulo,
+                "local": localizacao_bruta, # Aqui virá o Distrito ou Município real
+                "qualificacao": resumo,
+                "salario": "A combinar",
+                "setor": termo,
+                "data_coleta": datetime.now().strftime('%d/%m')
+            })
+
+        # Salva o Banco de Dados para o seu PWA
+        os.makedirs('data', exist_ok=True)
+        with open('data/inteligencia.json', 'w', encoding='utf-8') as f:
+            json.dump({
+                "projeto": "Monitoramento Ocupações RMSP",
+                "atualizado": datetime.now().strftime('%d/%m/%Y %H:%M'),
+                "vagas": vagas_capturadas
+            }, f, ensure_ascii=False, indent=4)
+            
+        print(f"Sucesso: {len(vagas_capturadas)} vagas mapeadas na RMSP.")
+
+    except Exception as e:
+        print(f"Erro na mineração: {e}")
 
 if __name__ == "__main__":
-    # EXEMPLO DE ENTRADA DINÂMICA (AQUI O ROBÔ RECEBE O QUE ENCONTRAR NA RMSP)
-    # No futuro, essa lista será preenchida por um Crawler automático.
-    vagas_do_dia = [
-        {
-            "empresa": "Amazon Logística", 
-            "vaga": "Auxiliar de Operações", 
-            "salario": 1850.00, 
-            "qualificacao": "Ensino Médio, Disponibilidade Total", 
-            "local": "Cajamar - SP", # Fora do eixo inicial
-            "setor": "Logística (Toyotismo)"
-        },
-        {
-            "empresa": "Itaú Unibanco", 
-            "vaga": "Operador de Atendimento", 
-            "salario": 2100.00, 
-            "qualificacao": "Superior cursando, CPA-10", 
-            "local": "São Paulo - Centro", 
-            "setor": "Financeiro"
-        },
-        {
-            "empresa": "Pão de Açúcar", 
-            "vaga": "Repositor Especializado", 
-            "salario": 1650.00, 
-            "qualificacao": "Experiência em Perecíveis", 
-            "local": "Santo André - ABC", # Expandindo para o ABC
-            "setor": "Varejo"
-        },
-        {
-            "empresa": "Hosp. Albert Einstein", 
-            "vaga": "Auxiliar Administrativo", 
-            "salario": 2400.00, 
-            "qualificacao": "Curso de Gestão Hospitalar", 
-            "local": "São Paulo - Morumbi", 
-            "setor": "Saúde"
-        }
-    ]
-    
-    processar_vagas_rmsp(vagas_do_dia)
+    minerar_vagas_grande_sp("Logística")

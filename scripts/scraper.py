@@ -4,34 +4,29 @@ import json
 import os
 from datetime import datetime
 
-def definir_perfil(vaga, qualificacao):
-    texto = (vaga + " " + qualificacao).lower()
-    if "superior" in texto or "graduação" in texto or "analista" in texto:
+def definir_perfil(vaga, resumo):
+    texto = (vaga + " " + resumo).lower()
+    if any(term in texto for term in ["superior", "graduação", "analista", "técnico"]):
         return "Especializado / Técnico"
     return "Operacional"
 
 def minerar():
-    # Setores diversificados para garantir que o balde não venha vazio
-    setores = ["Logística", "Varejo", "Indústria", "Serviços", "Saúde", "Construção"]
+    # Setores estratégicos para a RMSP
+    setores = ["Logística", "Varejo", "Indústria", "Saúde", "Serviços", "Construção"]
     banco = []
     
-    # Cabeçalho de navegador real (essencial para não ser bloqueado)
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
     }
 
     for setor in setores:
-        # URL de busca direta na Grande São Paulo
+        print(f"Minerando setor: {setor}...")
         url = f"https://www.vagas.com.br/vagas-de-{setor}-em-sao-paulo"
         
         try:
-            print(f"Buscando setor: {setor}...")
             res = requests.get(url, headers=headers, timeout=15)
-            
             if res.status_code == 200:
                 soup = BeautifulSoup(res.text, 'html.parser')
-                # A tag correta das vagas no portal atualizado
                 cards = soup.find_all('li', class_='vaga')
 
                 for card in cards:
@@ -47,27 +42,26 @@ def minerar():
                             "vaga": titulo,
                             "local": local,
                             "perfil": definir_perfil(titulo, resumo),
-                            "qualificacao": resumo[:180]
+                            "qualificacao": resumo[:160]
                         })
-                    except:
-                        continue
+                    except: continue
             else:
-                print(f"Erro no acesso ({res.status_code}) ao setor {setor}")
+                print(f"Acesso negado ao setor {setor} (Status {res.status_code})")
         except Exception as e:
-            print(f"Falha na conexão: {e}")
+            print(f"Erro na conexão: {e}")
 
-    # Consolidação final
+    # Salva o resultado para o Dashboard
     os.makedirs('data', exist_ok=True)
-    dados_finais = {
+    output = {
         "atualizado": datetime.now().strftime('%d/%m/%Y %H:%M'),
         "total_vagas": len(banco),
         "vagas": banco
     }
 
     with open('data/inteligencia.json', 'w', encoding='utf-8') as f:
-        json.dump(dados_finais, f, ensure_ascii=False, indent=4)
+        json.dump(output, f, ensure_ascii=False, indent=4)
     
-    print(f"Finalizado! {len(banco)} vagas capturadas.")
+    print(f"✅ Sucesso! {len(banco)} vagas capturadas.")
 
 if __name__ == "__main__":
     minerar()

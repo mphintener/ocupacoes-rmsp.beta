@@ -28,10 +28,13 @@ jobs:
       - name: Executar Mineração de Dados
         run: python scripts/scraper.py # AGORA ESTE PASSO VAI APARECER
 
-      - name: Salvar Dados no Repositório
+      - - name: Salvar Dados no Repositório
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          # Sincroniza as versões para evitar o erro de 'remote rejected'
+          git pull --rebase origin main
           git add data/inteligencia.json
           git commit -m "Update: Dados da RMSP atualizados" || echo "Sem mudanças"
-          git push
+          # Tenta o push; se falhar, tenta sincronizar novamente
+          git push origin main || (git pull --rebase origin main && git push origin main)
